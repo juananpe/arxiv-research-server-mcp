@@ -1,7 +1,14 @@
 # Arxiv Research Server MCP
 
-You can use `.vscode/mcp.json` file as an example to know how to install the server.
+## Create a venv and install the requirements
 
+```bash
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+````
+
+You can use `.vscode/mcp.json` file as an example to know how to install the server.
 
 ## Available Tools
 

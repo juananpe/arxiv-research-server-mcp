@@ -1,10 +1,10 @@
 {
     "servers": {
         "research_server": {
-            "command": "/Users/juanan/.local/bin/uv",
+            "command": "uv",
             "args": [
                 "--directory",
-                "/opt/research_server",
+                "/opt/arxiv-research-server-mcp",
                 "run",
                 "research_server.py"
             ]
