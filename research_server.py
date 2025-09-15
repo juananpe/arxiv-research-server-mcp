@@ -121,7 +121,7 @@ def get_available_folders() -> str:
     if folders:
         for folder in folders:
             content += f"- {folder}\n"
-        content += f"\nUse @{folder} to access papers in that topic.\n"
+        # content += f"\nUse @{folder} to access papers in that topic.\n"
     else:
         content += "No topics found.\n"
     
