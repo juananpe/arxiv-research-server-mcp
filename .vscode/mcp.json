@@ -1,0 +1,14 @@
+{
+    "servers": {
+        "research_server": {
+            "command": "/Users/juanan/.local/bin/uv",
+            "args": [
+                "--directory",
+                "/opt/research_server",
+                "run",
+                "research_server.py"
+            ]
+        }
+    },
+    "inputs": []
+}
