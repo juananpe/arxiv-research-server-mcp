@@ -1,4 +1,0 @@
-{
-  "image": "mcr.microsoft.com/devcontainers/python:3.12",
-  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh"
-}
