@@ -1,7 +1,7 @@
 {
   "servers": {
     "research server sse": {
-      "url": "https://legendary-space-memory-4jwqvq6gvwcqrg6-3001.app.github.dev/mcp",
+      "url": "https://research.ikasten.io/mcp",
       "type": "http"
     }
   },
