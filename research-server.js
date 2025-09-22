@@ -25,7 +25,7 @@ const mcpServer = new McpServer({
 // Helper function to search arXiv
 async function searchArxivPapers(topic, maxResults = 5) {
   try {
-    const searchQuery = topic.replace(/\s+/g, '+');
+    const searchQuery = topic.replace(/\s+/g, "+");
     const url = `http://export.arxiv.org/api/query?search_query=all:${searchQuery}&start=0&max_results=${maxResults}&sortBy=relevance`;
 
     const response = await axios.get(url);
@@ -33,17 +33,17 @@ async function searchArxivPapers(topic, maxResults = 5) {
     const result = await parser.parseStringPromise(response.data);
 
     const entries = result.feed.entry || [];
-    return entries.map(entry => ({
-      id: entry.id[0].split('/').pop(),
+    return entries.map((entry) => ({
+      id: entry.id[0].split("/").pop(),
       title: entry.title[0],
-      authors: entry.author.map(author => author.name[0]),
+      authors: entry.author.map((author) => author.name[0]),
       summary: entry.summary[0],
       published: entry.published[0],
-      pdf_url: entry.link.find(link => link.$.title === 'pdf').$.href,
-      short_id: entry.id[0].split('/').pop()
+      pdf_url: entry.link.find((link) => link.$.title === "pdf").$.href,
+      short_id: entry.id[0].split("/").pop(),
     }));
   } catch (error) {
-    console.error('Error searching arXiv:', error);
+    console.error("Error searching arXiv:", error);
     return [];
   }
 }
@@ -53,20 +53,29 @@ mcpServer.registerTool(
   "search_papers",
   {
     title: "Search Papers",
-    description: "Search for papers on arXiv based on a topic and store their information.",
+    description:
+      "Search for papers on arXiv based on a topic and store their information.",
     inputSchema: {
       topic: z.string().describe("The topic to search for"),
-      max_results: z.number().optional().default(5).describe("Maximum number of results to retrieve")
+      max_results: z
+        .number()
+        .optional()
+        .default(5)
+        .describe("Maximum number of results to retrieve"),
     },
   },
   async ({ topic, max_results }, { authInfo }) => {
-    console.info(`>>> 🛠️ Tool: 'search_papers' called for '${topic}' by user: ${authInfo?.userId || "anonymous"}`);
+    console.info(
+      `>>> 🛠️ Tool: 'search_papers' called for '${topic}' by user: ${
+        authInfo?.userId || "anonymous"
+      }`
+    );
 
     try {
       const papers = await searchArxivPapers(topic, max_results);
 
       // Create directory for this topic
-      const topicDir = topic.toLowerCase().replace(/\s+/g, '_');
+      const topicDir = topic.toLowerCase().replace(/\s+/g, "_");
       const dirPath = path.join(PAPER_DIR, topicDir);
       fs.mkdirSync(dirPath, { recursive: true });
 
@@ -75,7 +84,7 @@ mcpServer.registerTool(
       // Try to load existing papers info
       let papersInfo = {};
       try {
-        const existingData = fs.readFileSync(filePath, 'utf8');
+        const existingData = fs.readFileSync(filePath, "utf8");
         papersInfo = JSON.parse(existingData);
       } catch (error) {
         // File doesn't exist or is invalid, start fresh
@@ -90,7 +99,7 @@ mcpServer.registerTool(
           authors: paper.authors,
           summary: paper.summary,
           pdf_url: paper.pdf_url,
-          published: paper.published.split('T')[0] // Get date part only
+          published: paper.published.split("T")[0], // Get date part only
         };
         papersInfo[paper.short_id] = paperInfo;
       }
@@ -104,9 +113,11 @@ mcpServer.registerTool(
         content: [{ type: "text", text: JSON.stringify(paperIds, null, 2) }],
       };
     } catch (error) {
-      console.error('Error in search_papers:', error);
+      console.error("Error in search_papers:", error);
       return {
-        content: [{ type: "text", text: `Error searching papers: ${error.message}` }],
+        content: [
+          { type: "text", text: `Error searching papers: ${error.message}` },
+        ],
       };
     }
   }
@@ -117,13 +128,18 @@ mcpServer.registerTool(
   "extract_info",
   {
     title: "Extract Info",
-    description: "Search for information about a specific paper across all topic directories.",
+    description:
+      "Search for information about a specific paper across all topic directories.",
     inputSchema: {
-      paper_id: z.string().describe("The ID of the paper to look for")
+      paper_id: z.string().describe("The ID of the paper to look for"),
     },
   },
   async ({ paper_id }, { authInfo }) => {
-    console.info(`>>> 🛠️ Tool: 'extract_info' called for '${paper_id}' by user: ${authInfo?.userId || "anonymous"}`);
+    console.info(
+      `>>> 🛠️ Tool: 'extract_info' called for '${paper_id}' by user: ${
+        authInfo?.userId || "anonymous"
+      }`
+    );
 
     try {
       // Get all topic directories
@@ -138,12 +154,17 @@ mcpServer.registerTool(
 
           if (fs.existsSync(filePath)) {
             try {
-              const data = fs.readFileSync(filePath, 'utf8');
+              const data = fs.readFileSync(filePath, "utf8");
               const papersInfo = JSON.parse(data);
 
               if (papersInfo[paper_id]) {
                 return {
-                  content: [{ type: "text", text: JSON.stringify(papersInfo[paper_id], null, 2) }],
+                  content: [
+                    {
+                      type: "text",
+                      text: JSON.stringify(papersInfo[paper_id], null, 2),
+                    },
+                  ],
                 };
               }
             } catch (error) {
@@ -155,12 +176,19 @@ mcpServer.registerTool(
       }
 
       return {
-        content: [{ type: "text", text: `There's no saved information related to paper ${paper_id}.` }],
+        content: [
+          {
+            type: "text",
+            text: `There's no saved information related to paper ${paper_id}.`,
+          },
+        ],
       };
     } catch (error) {
-      console.error('Error in extract_info:', error);
+      console.error("Error in extract_info:", error);
       return {
-        content: [{ type: "text", text: `Error extracting info: ${error.message}` }],
+        content: [
+          { type: "text", text: `Error extracting info: ${error.message}` },
+        ],
       };
     }
   }
@@ -217,7 +245,7 @@ mcpServer.registerResource(
     mimeType: "text/markdown",
   },
   async (topic) => {
-    const topicDir = topic.toLowerCase().replace(/\s+/g, '_');
+    const topicDir = topic.toLowerCase().replace(/\s+/g, "_");
     const papersFile = path.join(PAPER_DIR, topicDir, "papers_info.json");
 
     if (!fs.existsSync(papersFile)) {
@@ -225,17 +253,19 @@ mcpServer.registerResource(
     }
 
     try {
-      const data = fs.readFileSync(papersFile, 'utf8');
+      const data = fs.readFileSync(papersFile, "utf8");
       const papersData = JSON.parse(data);
 
       // Create markdown content with paper details
-      let content = `# Papers on ${topic.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}\n\n`;
+      let content = `# Papers on ${topic
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase())}\n\n`;
       content += `Total papers: ${Object.keys(papersData).length}\n\n`;
 
       for (const [paperId, paperInfo] of Object.entries(papersData)) {
         content += `## ${paperInfo.title}\n`;
         content += `- **Paper ID**: ${paperId}\n`;
-        content += `- **Authors**: ${paperInfo.authors.join(', ')}\n`;
+        content += `- **Authors**: ${paperInfo.authors.join(", ")}\n`;
         content += `- **Published**: ${paperInfo.published}\n`;
         content += `- **PDF URL**: [${paperInfo.pdf_url}](${paperInfo.pdf_url})\n\n`;
         content += `### Summary\n${paperInfo.summary.substring(0, 500)}...\n\n`;
@@ -253,15 +283,28 @@ mcpServer.registerResource(
 mcpServer.registerPrompt(
   "generate_search_prompt",
   {
-    name: "Generate Search Prompt",
-    description: "Generate a prompt for Claude to find and discuss academic papers on a specific topic.",
-    inputSchema: {
+    title: "Generate Search Prompt",
+    description:
+      "Generate a prompt for Claude to find and discuss academic papers on a specific topic.",
+    argsSchema: {
       topic: z.string().describe("The research topic"),
-      num_papers: z.number().optional().default(5).describe("Number of papers to search for")
+      num_papers: z
+        .union([z.string(), z.number()])
+        .optional()
+        .default(5)
+        .transform((val) =>
+          typeof val === "string" ? parseInt(val, 10) || 5 : val
+        )
+        .describe("Number of papers to search for"),
     },
   },
-  async ({ topic, num_papers }) => {
-    return `Search for ${num_papers} academic papers about '${topic}' using the search_papers tool. 
+  async ({ topic, num_papers }) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Search for ${num_papers} academic papers about '${topic}' using the search_papers tool. 
 
 Follow these instructions:
 1. First, search for papers using search_papers(topic='${topic}', max_results=${num_papers})
@@ -282,8 +325,11 @@ Follow these instructions:
 
 4. Organize your findings in a clear, structured format with headings and bullet points for easy readability.
 
-Please present both detailed information about each paper and a high-level synthesis of the research landscape in ${topic}.`;
-  }
+Please present both detailed information about each paper and a high-level synthesis of the research landscape in ${topic}.`,
+        },
+      },
+    ],
+  })
 );
 
 // OAuth Configuration
@@ -291,14 +337,15 @@ const OAUTH_CONFIG = {
   clientId: process.env.OAUTH_CLIENT_ID || "arxiv-research-mcp-client",
   clientSecret: process.env.OAUTH_CLIENT_SECRET || "your-client-secret",
   allowedRedirectUris: process.env.ALLOWED_REDIRECT_URIS
-    ? process.env.ALLOWED_REDIRECT_URIS.split(",").map(uri => uri.trim())
+    ? process.env.ALLOWED_REDIRECT_URIS.split(",").map((uri) => uri.trim())
     : [
-        process.env.OAUTH_REDIRECT_URI || "http://localhost:3001/callback",
+        process.env.OAUTH_REDIRECT_URI || "http://localhost:3004/callback",
         "http://localhost:6274/oauth/callback",
         "http://localhost:6274/oauth/callback/debug",
       ],
-  authorizationUrl: process.env.AUTHORIZATION_URL || "http://localhost:3001/authorize",
-  tokenUrl: process.env.TOKEN_URL || "http://localhost:3001/token",
+  authorizationUrl:
+    process.env.AUTHORIZATION_URL || "http://localhost:3004/authorize",
+  tokenUrl: process.env.TOKEN_URL || "http://localhost:3004/token",
   scopes: ["read_papers", "search_papers"],
   jwtSecret: process.env.JWT_SECRET || "your-jwt-secret-key",
 };
@@ -315,7 +362,10 @@ const app = express();
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, mcp-session-id, mcp-protocol-version");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization, mcp-session-id, mcp-protocol-version"
+  );
   res.header("Access-Control-Expose-Headers", "mcp-session-id");
 
   // Handle preflight requests
@@ -461,7 +511,9 @@ app.get("/.well-known/oauth-protected-resource", (req, res) => {
 
 // MCP-specific OAuth Protected Resource endpoint
 app.get("/.well-known/oauth-protected-resource/mcp", (req, res) => {
-  console.log(`📋 GET /.well-known/oauth-protected-resource/mcp from ${req.ip}`);
+  console.log(
+    `📋 GET /.well-known/oauth-protected-resource/mcp from ${req.ip}`
+  );
   const base = getBaseUrl(req);
   res.json({
     resource: `${base}/mcp`,
@@ -550,7 +602,9 @@ app.get("/authorize", (req, res) => {
   if (!OAUTH_CONFIG.allowedRedirectUris.includes(redirect_uri)) {
     return res.status(400).json({
       error: "invalid_request",
-      error_description: `Invalid redirect_uri. Allowed URIs: ${OAUTH_CONFIG.allowedRedirectUris.join(", ")}`,
+      error_description: `Invalid redirect_uri. Allowed URIs: ${OAUTH_CONFIG.allowedRedirectUris.join(
+        ", "
+      )}`,
     });
   }
 
@@ -570,7 +624,9 @@ app.get("/authorize", (req, res) => {
     expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
   });
 
-  console.log(`✅ Generated authorization code: ${authCode} for user: ${userId}`);
+  console.log(
+    `✅ Generated authorization code: ${authCode} for user: ${userId}`
+  );
 
   // Redirect back to client with authorization code
   const redirectUrl = new URL(redirect_uri);
@@ -584,7 +640,10 @@ app.get("/authorize", (req, res) => {
 
 // OAuth Token Endpoint
 app.post("/token", (req, res) => {
-  console.log(`🎫 POST /token from ${req.ip} with grant_type:`, req.body?.grant_type);
+  console.log(
+    `🎫 POST /token from ${req.ip} with grant_type:`,
+    req.body?.grant_type
+  );
   const {
     grant_type,
     code,
@@ -630,7 +689,8 @@ app.post("/token", (req, res) => {
       if (client_secret !== OAUTH_CONFIG.clientSecret) {
         return res.status(400).json({
           error: "invalid_client",
-          error_description: "Invalid client credentials - client_secret required for non-PKCE flows",
+          error_description:
+            "Invalid client credentials - client_secret required for non-PKCE flows",
         });
       }
     } else {
@@ -783,7 +843,9 @@ app.get("/tokeninfo", authenticateToken, (req, res) => {
 
 // Protected MCP endpoint - now uses single server instance
 app.post("/mcp", authenticateToken, async (req, res) => {
-  console.log(`📨 POST /mcp from ${req.ip} - Method: ${req.body?.method}, Session: ${req.headers["mcp-session-id"]}`);
+  console.log(
+    `📨 POST /mcp from ${req.ip} - Method: ${req.body?.method}, Session: ${req.headers["mcp-session-id"]}`
+  );
   console.log("📨 Received MCP request:", req.body);
 
   try {
@@ -827,7 +889,9 @@ app.post("/mcp", authenticateToken, async (req, res) => {
 
 // Handle GET requests for SSE streams - now requires authentication
 app.get("/mcp", authenticateToken, async (req, res) => {
-  console.log(`📡 GET /mcp (SSE) from ${req.ip} - Session: ${req.headers["mcp-session-id"]}`);
+  console.log(
+    `📡 GET /mcp (SSE) from ${req.ip} - Session: ${req.headers["mcp-session-id"]}`
+  );
   const headerVal = req.headers["mcp-session-id"];
   const sessionId = Array.isArray(headerVal) ? headerVal[0] : headerVal;
 
@@ -851,7 +915,9 @@ app.get("/mcp", authenticateToken, async (req, res) => {
 
 // Handle DELETE requests for session termination - now requires authentication
 app.delete("/mcp", authenticateToken, async (req, res) => {
-  console.log(`🗑️ DELETE /mcp from ${req.ip} - Session: ${req.headers["mcp-session-id"]}`);
+  console.log(
+    `🗑️ DELETE /mcp from ${req.ip} - Session: ${req.headers["mcp-session-id"]}`
+  );
   const headerVal = req.headers["mcp-session-id"];
   const sessionId = Array.isArray(headerVal) ? headerVal[0] : headerVal;
 
@@ -907,7 +973,7 @@ app.get("/", (req, res) => {
 // Main function to start the server
 async function main() {
   try {
-    const port = process.env.PORT || 3001;
+    const port = process.env.PORT || 3004;
 
     app.listen(port, () => {
       console.log(`🚀 MCP server (Streamable HTTP) started on port ${port}`);
@@ -931,7 +997,10 @@ process.on("SIGINT", async () => {
       console.log(`🔄 Closing transport for session ${sessionId}...`);
       await transport.close();
     } catch (error) {
-      console.error(`❌ Error closing transport for session ${sessionId}:`, error);
+      console.error(
+        `❌ Error closing transport for session ${sessionId}:`,
+        error
+      );
     }
   }
 
@@ -951,7 +1020,10 @@ process.on("SIGTERM", async () => {
       console.log(`🔄 Closing transport for session ${sessionId}...`);
       await transport.close();
     } catch (error) {
-      console.error(`❌ Error closing transport for session ${sessionId}:`, error);
+      console.error(
+        `❌ Error closing transport for session ${sessionId}:`,
+        error
+      );
     }
   }
 
@@ -970,7 +1042,9 @@ main().catch((err) => {
 
 // Catch-all endpoint to log unexpected requests
 app.use((req, res, next) => {
-  console.log(`❓ ${req.method} ${req.path} from ${req.ip} - UNEXPECTED ENDPOINT`);
+  console.log(
+    `❓ ${req.method} ${req.path} from ${req.ip} - UNEXPECTED ENDPOINT`
+  );
   console.log(`   Headers:`, JSON.stringify(req.headers, null, 2));
   if (req.body && Object.keys(req.body).length > 0) {
     console.log(`   Body:`, JSON.stringify(req.body, null, 2));
