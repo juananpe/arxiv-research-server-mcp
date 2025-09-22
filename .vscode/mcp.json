@@ -1,14 +1,6 @@
 {
     "servers": {
-        "research_server": {
-            "command": "uv",
-            "args": [
-                "--directory",
-                "/opt/arxiv-research-server-mcp",
-                "run",
-                "research_server.py"
-            ]
-        }
+ 
     },
     "inputs": []
 }

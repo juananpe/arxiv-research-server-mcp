@@ -12,3 +12,5 @@ uv.lock
 
 papers/
 
+node_modules/
+package-lock.json
