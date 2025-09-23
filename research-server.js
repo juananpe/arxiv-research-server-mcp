@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 import express from "express";
@@ -196,13 +196,14 @@ mcpServer.registerTool(
 
 // Resource: papers://folders
 mcpServer.registerResource(
+  "available-topics",
   "papers://folders",
   {
-    name: "Available Topics",
+    title: "Available Topics",
     description: "List all available topic folders in the papers directory.",
     mimeType: "text/markdown",
   },
-  async () => {
+  async (uri) => {
     const folders = [];
 
     // Get all topic directories
@@ -232,24 +233,36 @@ mcpServer.registerResource(
       content += "No topics found.\n";
     }
 
-    return content;
+    return {
+      contents: [{
+        uri: uri.href,
+        text: content
+      }]
+    };
   }
 );
 
 // Resource: papers://{topic}
 mcpServer.registerResource(
-  "papers://{topic}",
+  "topic-papers",
+  new ResourceTemplate("papers://{topic}", { list: undefined }),
   {
-    name: "Topic Papers",
+    title: "Topic Papers",
     description: "Get detailed information about papers on a specific topic.",
     mimeType: "text/markdown",
   },
-  async (topic) => {
+  async (uri, { topic }) => {
     const topicDir = topic.toLowerCase().replace(/\s+/g, "_");
     const papersFile = path.join(PAPER_DIR, topicDir, "papers_info.json");
 
     if (!fs.existsSync(papersFile)) {
-      return `# No papers found for topic: ${topic}\n\nTry searching for papers on this topic first.`;
+      const content = `# No papers found for topic: ${topic}\n\nTry searching for papers on this topic first.`;
+      return {
+        contents: [{
+          uri: uri.href,
+          text: content
+        }]
+      };
     }
 
     try {
@@ -272,9 +285,20 @@ mcpServer.registerResource(
         content += "---\n\n";
       }
 
-      return content;
+      return {
+        contents: [{
+          uri: uri.href,
+          text: content
+        }]
+      };
     } catch (error) {
-      return `# Error reading papers data for ${topic}\n\nThe papers data file is corrupted.`;
+      const content = `# Error reading papers data for ${topic}\n\nThe papers data file is corrupted.`;
+      return {
+        contents: [{
+          uri: uri.href,
+          text: content
+        }]
+      };
     }
   }
 );
