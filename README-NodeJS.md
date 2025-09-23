@@ -37,16 +37,6 @@ npm install
 3. Configure environment variables:
 Edit the `.env` file with your OAuth settings and other configuration.
 
-## Testing
-
-Before running the full server, you can test the arXiv API integration:
-
-```bash
-node test-arxiv.js
-```
-
-This will search for papers on "machine learning" and display the results.
-
 ## Usage
 
 ### Starting the Server

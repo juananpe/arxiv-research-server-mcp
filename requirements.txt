@@ -1,9 +1,0 @@
-anthropic
-arxiv
-mcp
-pypdf2
-python-dotenv
-typing
-uv
-flask
-pyjwt
