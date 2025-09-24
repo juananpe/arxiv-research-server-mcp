@@ -1,5 +1,8 @@
 import { config } from "dotenv";
-import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  McpServer,
+  ResourceTemplate,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 import express from "express";
@@ -234,10 +237,12 @@ mcpServer.registerResource(
     }
 
     return {
-      contents: [{
-        uri: uri.href,
-        text: content
-      }]
+      contents: [
+        {
+          uri: uri.href,
+          text: content,
+        },
+      ],
     };
   }
 );
@@ -258,10 +263,12 @@ mcpServer.registerResource(
     if (!fs.existsSync(papersFile)) {
       const content = `# No papers found for topic: ${topic}\n\nTry searching for papers on this topic first.`;
       return {
-        contents: [{
-          uri: uri.href,
-          text: content
-        }]
+        contents: [
+          {
+            uri: uri.href,
+            text: content,
+          },
+        ],
       };
     }
 
@@ -286,18 +293,22 @@ mcpServer.registerResource(
       }
 
       return {
-        contents: [{
-          uri: uri.href,
-          text: content
-        }]
+        contents: [
+          {
+            uri: uri.href,
+            text: content,
+          },
+        ],
       };
     } catch (error) {
       const content = `# Error reading papers data for ${topic}\n\nThe papers data file is corrupted.`;
       return {
-        contents: [{
-          uri: uri.href,
-          text: content
-        }]
+        contents: [
+          {
+            uri: uri.href,
+            text: content,
+          },
+        ],
       };
     }
   }
@@ -948,7 +959,7 @@ app.delete("/mcp", authenticateToken, async (req, res) => {
   if (sessionId && transports.has(sessionId)) {
     console.log(`🗑️ Cleaning up session: ${sessionId}`);
     transports.delete(sessionId);
-    res.status(204).end();
+    res.status(200).json({ success: true });
   } else {
     res.status(404).json({ error: "Session not found" });
   }
@@ -994,6 +1005,30 @@ app.get("/", (req, res) => {
   });
 });
 
+// Shutdown helper function
+async function shutdownServer() {
+  console.log("\n🛑 Shutting down MCP server...");
+
+  // Close all active transports
+  for (const [sessionId, transport] of transports) {
+    try {
+      console.log(`🔄 Closing transport for session ${sessionId}...`);
+      await transport.close();
+    } catch (error) {
+      console.error(
+        `❌ Error closing transport for session ${sessionId}:`,
+        error
+      );
+    }
+  }
+
+  // Clear the transports map
+  transports.clear();
+
+  console.log("✅ Server shutdown complete");
+  process.exit(0);
+}
+
 // Main function to start the server
 async function main() {
   try {
@@ -1013,49 +1048,11 @@ async function main() {
 
 // Handle graceful shutdown
 process.on("SIGINT", async () => {
-  console.log("\n🛑 Shutting down MCP server...");
-
-  // Close all active transports
-  for (const [sessionId, transport] of transports) {
-    try {
-      console.log(`🔄 Closing transport for session ${sessionId}...`);
-      await transport.close();
-    } catch (error) {
-      console.error(
-        `❌ Error closing transport for session ${sessionId}:`,
-        error
-      );
-    }
-  }
-
-  // Clear the transports map
-  transports.clear();
-
-  console.log("✅ Server shutdown complete");
-  process.exit(0);
+  await shutdownServer();
 });
 
 process.on("SIGTERM", async () => {
-  console.log("\n🛑 Shutting down MCP server...");
-
-  // Close all active transports
-  for (const [sessionId, transport] of transports) {
-    try {
-      console.log(`🔄 Closing transport for session ${sessionId}...`);
-      await transport.close();
-    } catch (error) {
-      console.error(
-        `❌ Error closing transport for session ${sessionId}:`,
-        error
-      );
-    }
-  }
-
-  // Clear the transports map
-  transports.clear();
-
-  console.log("✅ Server shutdown complete");
-  process.exit(0);
+  await shutdownServer();
 });
 
 // Start the server

@@ -6,9 +6,16 @@
   "type": "module",
   "scripts": {
     "start": "node research-server.js",
-    "dev": "node --watch research-server.js"
+    "dev": "node --watch research-server.js",
+    "start:streamable": "node research-server-streamable.js",
+    "dev:streamable": "node --watch research-server-streamable.js"
   },
-  "keywords": ["mcp", "arxiv", "research", "papers"],
+  "keywords": [
+    "mcp",
+    "arxiv",
+    "research",
+    "papers"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
