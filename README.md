@@ -4,7 +4,7 @@
 
 ```bash
 uv venv
-source .venv/bin/activate
+source .venv/bin/activate # or  .venv\Scripts\activate in Windows
 uv pip install -r requirements.txt
 ````
 
