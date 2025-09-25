@@ -4,7 +4,7 @@
             "command": "uv",
             "args": [
                 "--directory",
-                "/workspaces/arxiv-research-server-mcp",
+                "/opt/arxiv-research-server-mcp",
                 "run",
                 "research_server.py"
             ]
