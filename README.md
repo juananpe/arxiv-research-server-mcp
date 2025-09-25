@@ -2,6 +2,24 @@
 
 ## Create a venv and install the requirements
 
+Install uv if you haven't done so yet:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+````
+
+In Windows:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Or you can also install uv via pip:
+
+```bash
+pip install uv
+```
+
 ```bash
 uv venv
 source .venv/bin/activate # or  .venv\Scripts\activate in Windows
