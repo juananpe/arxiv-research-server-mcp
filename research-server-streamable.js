@@ -29,21 +29,44 @@ async function searchArxivPapers(topic, maxResults = 5) {
   try {
     const searchQuery = topic.replace(/\s+/g, "+");
     const url = `http://export.arxiv.org/api/query?search_query=all:${searchQuery}&start=0&max_results=${maxResults}&sortBy=relevance`;
+    console.log(`Searching arXiv with URL: ${url}`);
 
     const response = await axios.get(url);
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(response.data);
 
     const entries = result.feed.entry || [];
-    return entries.map((entry) => ({
-      id: entry.id[0].split("/").pop(),
-      title: entry.title[0],
-      authors: entry.author.map((author) => author.name[0]),
-      summary: entry.summary[0],
-      published: entry.published[0],
-      pdf_url: entry.link.find((link) => link.$.title === "pdf").$.href,
-      short_id: entry.id[0].split("/").pop(),
-    }));
+    return entries.map((entry) => {
+      // Find the PDF link safely
+      let pdf_url = null;
+      if (Array.isArray(entry.link)) {
+        const pdfLinkObj = entry.link.find(
+          (link) => link.$ && link.$.title === "pdf"
+        );
+        if (pdfLinkObj && pdfLinkObj.$ && pdfLinkObj.$.href) {
+          pdf_url = pdfLinkObj.$.href;
+        } else {
+          // Fallback: try to find a link with type application/pdf
+          const altPdfLink = entry.link.find(
+            (link) => link.$ && link.$.type === "application/pdf"
+          );
+          if (altPdfLink && altPdfLink.$ && altPdfLink.$.href) {
+            pdf_url = altPdfLink.$.href;
+          }
+        }
+      }
+      return {
+        id: entry.id[0].split("/").pop(),
+        title: entry.title[0],
+        authors: Array.isArray(entry.author)
+          ? entry.author.map((author) => author.name[0])
+          : [],
+        summary: entry.summary ? entry.summary[0] : "",
+        published: entry.published ? entry.published[0] : "",
+        pdf_url,
+        short_id: entry.id[0].split("/").pop(),
+      };
+    });
   } catch (error) {
     console.error("Error searching arXiv:", error);
     return [];
