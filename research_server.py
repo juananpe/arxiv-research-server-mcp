@@ -7,7 +7,7 @@ from mcp.server.fastmcp import FastMCP
 PAPER_DIR = "papers"
 
 # Initialize FastMCP server with host and port configuration
-mcp = FastMCP("research", host="0.0.0.0", port=3001)
+mcp = FastMCP("research")
 
 @mcp.tool()
 def search_papers(topic: str, max_results: int = 5) -> List[str]:
