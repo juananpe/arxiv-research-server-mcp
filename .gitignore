@@ -12,3 +12,5 @@ uv.lock
 
 papers/
 
+.DS_Store
+package-lock.json

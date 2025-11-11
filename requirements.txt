@@ -1,6 +1,6 @@
 anthropic
 arxiv
-mcp
+fastmcp
 pypdf2
 python-dotenv
 typing
