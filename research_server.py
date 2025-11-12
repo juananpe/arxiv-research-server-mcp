@@ -192,4 +192,4 @@ if __name__ == "__main__":
     # Initialize and run the server
     # Use 'sse' transport for HTTP access (Server-Sent Events)
     # For stdio (used by Claude Desktop), use transport="stdio"
-    mcp.run(transport="streamable-http")
+    mcp.run(transport="stdio")
