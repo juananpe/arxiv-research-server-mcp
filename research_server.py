@@ -189,7 +189,24 @@ Follow these instructions:
 Please present both detailed information about each paper and a high-level synthesis of the research landscape in {topic}."""
 
 if __name__ == "__main__":
-    # Initialize and run the server
-    # Use 'sse' transport for HTTP access (Server-Sent Events)
-    # For stdio (used by Claude Desktop), use transport="stdio"
-    mcp.run(transport="stdio")
+    # Create the ASGI app
+    app = mcp.streamable_http_app()
+
+    # Add CORS middleware
+    from starlette.middleware.cors import CORSMiddleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_headers=[
+            "mcp-protocol-version",
+            "mcp-session-id",
+            "Authorization",
+            "Content-Type",
+        ],
+        expose_headers=["mcp-session-id"],
+    )
+
+    # Run the server
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
